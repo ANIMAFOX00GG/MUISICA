@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Carta de Amor Interactiva</title>
+  <link href="https://fonts.googleapis.com/css2?family=Parisienne&family=Cormorant+Garamond:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f7e9f2;
+      --envelope:#d95d8c;
+      --paper:#ffebf3;
+      --text-color: #5a3d5c;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:radial-gradient(circle at 20% 10%, #fff 0%, var(--bg) 40%);
+      font-family: 'Cormorant Garamond', serif;
+      overflow:hidden;
+      position: relative;
+      transition: background 1.5s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .sunflower-bg {
+      background: url('https://animafox00gg.github.io/MUISICA/Sunflowers.png') no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    .scene{width:420px;max-width:92vw;position:relative;z-index:10}
+
+    /* Envelope */
+    .envelope{
+      width:100%;height:260px;position:relative;cursor:pointer;user-select:none;transition:transform .25s ease;
+      margin:0 auto;display:flex;align-items:center;justify-content:center;perspective:1000px;
+      transform: translateZ(0);
+    }
+
+    .envelope .body{
+      width:100%;height:180px;background:linear-gradient(180deg,var(--envelope),#c54a73);border-radius:0 0 12px 12px;position:relative;overflow:visible;box-shadow:0 10px 30px rgba(0,0,0,.12);
+      display:flex;align-items:flex-start;justify-content:center;padding:1.5rem;
+      transform: translateZ(0);
+    }
+
+    /* flap */
+    .envelope .flap{
+      position:absolute;top:45px;left:-5px;right:-5px;height:120px;background:linear-gradient(180deg,#f18fb5,#c64b7f);clip-path:polygon(0 0,50% 100%,100% 0);border-radius:12px 12px 0 0;transform-origin:center top;transition:transform .7s cubic-bezier(.2,.9,.3,1), top .7s cubic-bezier(.2,.9,.3,1);z-index:3;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+    }
+
+    .envelope.open .flap{transform:rotateX(180deg) translateY(-5px)}
+
+    /* inner card */
+    .card{
+      width:95%;min-height:320px;background:linear-gradient(180deg,var(--paper),#ffe6f0);border-radius:10px;box-shadow:0 8px 25px rgba(0,0,0,.1);position:absolute;top:15px;transform:translateY(80px);opacity:0;transition:all .8s cubic-bezier(.2,.9,.3,1);padding:30px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;overflow:visible;border: 1px solid rgba(255, 255, 255, 0.5);
+      transform: translateZ(0);
+    }
+    .envelope.open .card{transform:translateY(-80px);opacity:1;z-index:4}
+
+    .card h1{
+      margin:0 0 20px;
+      font-family: 'Parisienne', cursive;
+      font-size:2.4rem;
+      color:#8a2f57;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+      line-height: 1.2;
+    }
+    
+    .card p{
+      margin:0 0 15px;
+      color:var(--text-color);
+      line-height:1.6;
+      font-family: 'Cormorant Garamond', serif;
+      text-align: center;
+      font-size: 1.15rem;
+      font-weight: 300;
+    }
+    
+    .card .signature {
+      font-family: 'Parisienne', cursive;
+      text-align: right;
+      font-size: 1.8rem;
+      color: #8a2f57;
+      margin-top: 20px;
+      width: 100%;
+      font-weight: bold;
+    }
+
+    /* hearts animation */
+    .heart{
+      position:absolute;width:34px;height:34px;transform:translate(-50%,-50%) scale(0);pointer-events:none;z-index:30;
+      background:radial-gradient(circle at 30% 30%, #fff, transparent 40%),linear-gradient(180deg,#ff9ab9,#ff5a8a);
+      clip-path:polygon(50% 0%, 61% 13%, 75% 13%, 88% 25%, 88% 40%, 50% 80%, 12% 40%, 12% 25%, 25% 13%, 39% 13%);
+      animation:pop .6s forwards, floatUp 2.2s forwards;
+      will-change: transform, opacity;
+    }
+
+    @keyframes pop{
+      0%{transform:translate(-50%,-50%) scale(0)}
+      60%{transform:translate(-50%,-50%) scale(1.12)}
+      100%{transform:translate(-50%,-50%) scale(1)}
+    }
+
+    @keyframes floatUp{
+      to{transform:translate(-50%,-220%) scale(1);opacity:0}
+    }
+
+    /* Loading screen */
+    .loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: opacity 0.5s;
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #e63946;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Music indicator */
+    .music-note {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      color: #d95d8c;
+      font-size: 24px;
+      animation: bounce 2s infinite;
+      z-index: 100;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    /* Confetti */
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      opacity: 0;
+      z-index: 5;
+      pointer-events: none;
+      animation: confetti-fall linear infinite;
+      will-change: transform, opacity;
+    }
+    
+    .confetti-square {
+      clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+    }
+    
+    .confetti-triangle {
+      clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    }
+    
+    .confetti-circle {
+      border-radius: 50%;
+    }
+    
+    .confetti-star {
+      clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    }
+    
+    @keyframes confetti-fall {
+      0% {
+        transform: translateY(-10px) rotate(0deg);
+        opacity: 1;
+      }
+      90% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    .click-hint {
+      position: absolute;
+      bottom: -40px;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      color: #d95d8c;
+      font-style: italic;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    .progress-bar {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 3px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .progress {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ff9ab9, #ff5a8a);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .envelope.open .progress-bar {
+      display: none;
+    }
+
+    @media (max-width:480px){
+      .scene{width:380px}
+      .envelope{height:240px}
+      .card{
+        padding:20px;
+        min-height:280px;
+      }
+      .card h1 {
+        font-size: 2rem;
+        margin-bottom: 15px;
+      }
+      .card p {
+        font-size: 1.05rem;
+        margin-bottom: 12px;
+      }
+      .music-note {
+        bottom: 15px;
+        right: 15px;
+      }
+      
+      /* Optimizaciones para móviles */
+      .envelope .body {
+        height: 160px;
+      }
+      
+      .envelope .flap {
+        height: 100px;
+        top: 40px;
+      }
+      
+      .card {
+        min-height: 250px;
+        padding: 15px;
+      }
+    }
+
+    /* Para dispositivos táctiles */
+    @media (hover: none) and (pointer: coarse) {
+      .envelope {
+        cursor: default;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p>Cargando carta especial...</p>
+  </div>
+
+  <div class="scene">
+    <div class="envelope" id="envelope" title="Toca aquí para abrir">
+      <div class="flap"></div>
+      <div class="body">
+        <div class="card" id="card">
+          <h1>Para mi querido Girasol</h1>
+          <p>Tú que haces latir mi corazón y eres el amor más grande de mi vida, quiero entregarte mi alma sin medida y ser tuyo hasta donde lleguen mis días.</p>
+          <p>Tú, mi linda, que suficientes pétalos te han quitado, vengo yo a querer reparar ese daño con cuidados, amor y compañía es lo que te ofrezco vida mía.</p>
+          <p>Porque te amo más allá de la imaginación, daría lo que fuera por ser yo tu sol. Quiero que recuerdes siempre que me tienes a mí y estaré a tu lado aunque los días no siempre sean claros, yo te brindaré el calor que busca tu bello corazón.</p>
+          <p class="signature">TE AMO</p>
+        </div>
+      </div>
+      <div class="progress-bar" id="progressBar">
+        <div class="progress" id="progress"></div>
+      </div>
+      <div class="click-hint" id="clickHint">Toca 5 veces para abrir</div>
+    </div>
+  </div>
+
+  <div class="music-note" id="musicNote">♪</div>
+
+  <audio id="backgroundMusic" loop preload="auto">
+    <source src="https://animafox00gg.github.io/MUISICA/Elvis-Presley.mp3" type="audio/mpeg">
+    Tu navegador no soporta el elemento de audio.
+  </audio>
+
+  <script>
+    // Elementos DOM
+    const envelope = document.getElementById('envelope');
+    const card = document.getElementById('card');
+    const audio = document.getElementById('backgroundMusic');
+    const loadingScreen = document.getElementById('loading');
+    const musicNote = document.getElementById('musicNote');
+    const body = document.body;
+    const progressBar = document.getElementById('progressBar');
+    const progress = document.getElementById('progress');
+    const clickHint = document.getElementById('clickHint');
+    
+    let clicks = 0;
+    const threshold = 5; // REDUCIDO: número de clics necesarios para abrir (de 10 a 5)
+    let musicStarted = false;
+    let envelopeOpened = false;
+    let confettiInterval = null;
+
+    // Mostrar barra de progreso después de cargar
+    setTimeout(() => {
+      progressBar.style.display = 'block';
+      clickHint.style.display = 'block';
+    }, 1500);
+
+    // Función para crear corazones (optimizada)
+    function makeHeart(x,y){
+      const heart = document.createElement('div');
+      heart.className = 'heart';
+      heart.style.left = x + 'px';
+      heart.style.top = y + 'px';
+      const s = 0.6 + Math.random()*0.9;
+      heart.style.width = (24*s) + 'px';
+      heart.style.height = (24*s) + 'px';
+      heart.style.animationDelay = (Math.random()*0.12)+'s';
+      envelope.appendChild(heart);
+      setTimeout(()=>{
+        if (heart.parentNode) {
+          heart.remove();
+        }
+      }, 2400);
+    }
+
+    // Función para crear un solo confeti (optimizada)
+    function createSingleConfetti() {
+      const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4CAF50', '#FFEB3B', '#FF9800'];
+      const shapes = ['confetti-square', 'confetti-triangle', 'confetti-circle', 'confetti-star'];
+      
+      const confetti = document.createElement('div');
+      confetti.classList.add('confetti');
+      confetti.classList.add(shapes[Math.floor(Math.random() * shapes.length)]);
+      confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.left = Math.random() * 100 + 'vw';
+      confetti.style.top = '-20px';
+      confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+      
+      // Duración y movimiento aleatorio
+      const animationDuration = 5 + Math.random() * 5; // Reducida la duración máxima
+      
+      confetti.style.animationDuration = `${animationDuration}s`;
+      confetti.style.animationDelay = `${Math.random() * 0.5}s`; // Reducido el delay máximo
+      
+      document.body.appendChild(confetti);
+      
+      // Eliminar después de la animación
+      setTimeout(() => {
+        if (confetti.parentNode) {
+          confetti.remove();
+        }
+      }, animationDuration * 1000);
+    }
+
+    // Función para iniciar la lluvia de confeti infinita (optimizada)
+    function startInfiniteConfetti() {
+      // Crear confeti inicial (reducida la cantidad)
+      for (let i = 0; i < 20; i++) {
+        setTimeout(() => createSingleConfetti(), i * 100);
+      }
+      
+      // Continuar creando confeti periódicamente (aumentado el intervalo)
+      confettiInterval = setInterval(() => {
+        createSingleConfetti();
+      }, 250); // Aumentado el intervalo para mejor rendimiento
+    }
+
+    // Función para detener el confeti
+    function stopConfetti() {
+      if (confettiInterval) {
+        clearInterval(confettiInterval);
+        confettiInterval = null;
+      }
+    }
+
+    // Evento de clic/touch en el sobre (optimizado)
+    envelope.addEventListener('click', (e)=>{
+      const rect = envelope.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const heartsToMake = 1 + Math.floor(Math.random()*2); // Reducido el máximo
+      for(let i=0;i<heartsToMake;i++){
+        const ox = x + (Math.random()*40 - 20); // Reducido el rango
+        const oy = y + (Math.random()*30 - 15); // Reducido el rango
+        makeHeart(ox,oy);
+      }
+
+      clicks++;
+      // Actualizar barra de progreso
+      progress.style.width = `${(clicks/threshold)*100}%`;
+      
+      if(clicks >= threshold && !envelope.classList.contains('open')){
+        openEnvelope();
+      }
+    });
+
+    // Función para abrir el sobre
+    function openEnvelope(){
+      if (envelopeOpened) return;
+      
+      envelopeOpened = true;
+      envelope.classList.add('open');
+      
+      // Ocultar barra de progreso y hint
+      progressBar.style.display = 'none';
+      clickHint.style.display = 'none';
+      
+      // Cambiar el fondo a la imagen de girasoles
+      body.classList.add('sunflower-bg');
+      
+      // Iniciar lluvia infinita de confeti
+      startInfiniteConfetti();
+      
+      // Reducir el número de corazones al abrir
+      for(let i=0;i<12;i++){
+        setTimeout(()=>{
+          const rx = 40 + Math.random()*(envelope.clientWidth-80);
+          const ry = 20 + Math.random()*60;
+          makeHeart(rx,ry);
+        }, i*60); // Aumentado el intervalo
+      }
+    }
+
+    // Accesibilidad con teclado
+    envelope.tabIndex = 0;
+    envelope.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        envelope.click();
+      }
+    });
+
+    // Función para iniciar la música
+    function startMusic() {
+      if (musicStarted) return;
+      
+      audio.volume = 0.5; // Volumen al 50%
+      
+      // Intentar reproducir la música
+      const playPromise = audio.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          // La reproducción comenzó exitosamente
+          musicStarted = true;
+          setTimeout(() => {
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => {
+              loadingScreen.style.display = 'none';
+            }, 500);
+          }, 1000); // Reducido el tiempo de espera
+        }).catch(error => {
+          // La reproducción falló, mostrar instrucciones
+          loadingScreen.innerHTML = `
+            <h2 style="color: #d95d8c; text-align: center; margin-bottom: 20px;">¡Toca para activar la música!</h2>
+            <p style="text-align: center;">Por razones técnicas, debes interactuar con la página para reproducir la música.</p>
+          `;
+          
+          // Esperar a que el usuario haga clic
+          document.addEventListener('click', function() {
+            audio.play().then(() => {
+              musicStarted = true;
+              setTimeout(() => {
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                  loadingScreen.style.display = 'none';
+                }, 500);
+              }, 500);
+            });
+          }, { once: true });
+        });
+      }
+    }
+    
+    // Control de música con la nota musical
+    musicNote.addEventListener('click', () => {
+      if (audio.paused) {
+        audio.play();
+        musicNote.innerHTML = '♪';
+      } else {
+        audio.pause();
+        musicNote.innerHTML = '◼';
+      }
+    });
+
+    // Iniciar la música cuando la página esté cargada
+    window.addEventListener('load', () => {
+      // Precargar la imagen de fondo
+      const preloadImage = new Image();
+      preloadImage.src = 'https://animafox00gg.github.io/MUISICA/Sunflowers.png';
+      
+      // Esperar un momento antes de intentar reproducir la música
+      setTimeout(startMusic, 800); // Reducido el tiempo de espera
+    });
+
+    // Detener el confeti si la página se cierra
+    window.addEventListener('beforeunload', stopConfetti);
+    
+    // Optimización: Precargar recursos críticos
+    function preloadCriticalResources() {
+      // Precargar fuentes
+      document.fonts.load('1rem "Parisienne"');
+      document.fonts.load('1rem "Cormorant Garamond"');
+    }
+    
+    // Iniciar precarga
+    preloadCriticalResources();
+  </script>
+</body>
+</html>
