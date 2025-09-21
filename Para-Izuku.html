@@ -57,11 +57,52 @@
     .envelope.open .flap{transform:rotateX(180deg) translateY(-5px)}
 
     /* inner card */
-    .card{
-      width:95%;min-height:320px;background:linear-gradient(180deg,var(--paper),#ffe6f0);border-radius:10px;box-shadow:0 8px 25px rgba(0,0,0,.1);position:absolute;top:15px;transform:translateY(80px);opacity:0;transition:all .8s cubic-bezier(.2,.9,.3,1);padding:30px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;overflow:visible;border: 1px solid rgba(255, 255, 255, 0.5);
-      transform: translateZ(0);
+    .card-container {
+      position: absolute;
+      top: 15px;
+      width: 95%;
+      height: 350px;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all .8s cubic-bezier(.2,.9,.3,1);
+      z-index: 2;
+      overflow: hidden;
+      border-radius: 10px;
+      box-shadow: 0 8px 25px rgba(0,0,0,.1);
     }
-    .envelope.open .card{transform:translateY(-80px);opacity:1;z-index:4}
+    
+    .envelope.open .card-container {
+      transform: translateY(-80px);
+      opacity: 1;
+      z-index: 4;
+    }
+    
+    .card{
+      width:100%;
+      min-height:320px;
+      background:linear-gradient(180deg,var(--paper),#ffe6f0);
+      padding:30px;
+      text-align:center;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      overflow-y: auto;
+      max-height: 350px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    
+    .card::-webkit-scrollbar {
+      width: 5px;
+    }
+    
+    .card::-webkit-scrollbar-thumb {
+      background: rgba(217, 93, 140, 0.5);
+      border-radius: 10px;
+    }
+    
+    .card::-webkit-scrollbar-thumb:hover {
+      background: rgba(217, 93, 140, 0.8);
+    }
 
     .card h1{
       margin:0 0 20px;
@@ -246,9 +287,37 @@
       display: none;
     }
 
+    .scroll-indicator {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #d95d8c;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+      z-index: 5;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+    
+    .envelope.open .scroll-indicator {
+      animation: fadeInOut 2s infinite;
+    }
+    
+    @keyframes fadeInOut {
+      0%, 100% { opacity: 0; }
+      50% { opacity: 1; }
+    }
+
     @media (max-width:480px){
       .scene{width:380px}
       .envelope{height:240px}
+      .card-container {
+        height: 300px;
+      }
       .card{
         padding:20px;
         min-height:280px;
@@ -280,6 +349,11 @@
         min-height: 250px;
         padding: 15px;
       }
+      
+      .scroll-indicator {
+        font-size: 12px;
+        bottom: 5px;
+      }
     }
 
     /* Para dispositivos táctiles */
@@ -300,18 +374,21 @@
     <div class="envelope" id="envelope" title="Toca aquí para abrir">
       <div class="flap"></div>
       <div class="body">
-        <div class="card" id="card">
-          <h1>Para mi querido Girasol</h1>
-          <p>Tú que haces latir mi corazón y eres el amor más grande de mi vida, quiero entregarte mi alma sin medida y ser tuyo hasta donde lleguen mis días.</p>
-          <p>Tú, mi linda, que suficientes pétalos te han quitado, vengo yo a querer reparar ese daño con cuidados, amor y compañía es lo que te ofrezco vida mía.</p>
-          <p>Porque te amo más allá de la imaginación, daría lo que fuera por ser yo tu sol. Quiero que recuerdes siempre que me tienes a mí y estaré a tu lado aunque los días no siempre sean claros, yo te brindaré el calor que busca tu bello corazón.</p>
-          <p class="signature">TE AMO</p>
+        <div class="card-container">
+          <div class="card" id="card">
+            <h1>Para mi querido Girasol</h1>
+            <p>Tú que haces latir mi corazón y eres el amor más grande de mi vida, quiero entregarte mi alma sin medida y ser tuyo hasta donde lleguen mis días.</p>
+            <p>Tú, mi linda, que suficientes pétalos te han quitado, vengo yo a querer reparar ese daño con cuidados, amor y compañía es lo que te ofrezco vida mía.</p>
+            <p>Porque te amo más allá de la imaginación, daría lo que fuera por ser yo tu sol. Quiero que recuerdes siempre que me tienes a mí y estaré a tu lado aunque los días no siempre sean claros, yo te brindaré el calor que busca tu bello corazón.</p>
+            <p class="signature">TE AMO</p>
+          </div>
         </div>
       </div>
       <div class="progress-bar" id="progressBar">
         <div class="progress" id="progress"></div>
       </div>
       <div class="click-hint" id="clickHint">Toca 5 veces para abrir</div>
+      <div class="scroll-indicator" id="scrollIndicator">Desliza para leer más ↓</div>
     </div>
   </div>
 
@@ -333,9 +410,10 @@
     const progressBar = document.getElementById('progressBar');
     const progress = document.getElementById('progress');
     const clickHint = document.getElementById('clickHint');
+    const scrollIndicator = document.getElementById('scrollIndicator');
     
     let clicks = 0;
-    const threshold = 5; // REDUCIDO: número de clics necesarios para abrir (de 10 a 5)
+    const threshold = 5;
     let musicStarted = false;
     let envelopeOpened = false;
     let confettiInterval = null;
@@ -378,10 +456,10 @@
       confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
       
       // Duración y movimiento aleatorio
-      const animationDuration = 5 + Math.random() * 5; // Reducida la duración máxima
+      const animationDuration = 5 + Math.random() * 5;
       
       confetti.style.animationDuration = `${animationDuration}s`;
-      confetti.style.animationDelay = `${Math.random() * 0.5}s`; // Reducido el delay máximo
+      confetti.style.animationDelay = `${Math.random() * 0.5}s`;
       
       document.body.appendChild(confetti);
       
@@ -403,7 +481,7 @@
       // Continuar creando confeti periódicamente (aumentado el intervalo)
       confettiInterval = setInterval(() => {
         createSingleConfetti();
-      }, 250); // Aumentado el intervalo para mejor rendimiento
+      }, 250);
     }
 
     // Función para detener el confeti
@@ -420,10 +498,10 @@
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
 
-      const heartsToMake = 1 + Math.floor(Math.random()*2); // Reducido el máximo
+      const heartsToMake = 1 + Math.floor(Math.random()*2);
       for(let i=0;i<heartsToMake;i++){
-        const ox = x + (Math.random()*40 - 20); // Reducido el rango
-        const oy = y + (Math.random()*30 - 15); // Reducido el rango
+        const ox = x + (Math.random()*40 - 20);
+        const oy = y + (Math.random()*30 - 15);
         makeHeart(ox,oy);
       }
 
@@ -459,8 +537,13 @@
           const rx = 40 + Math.random()*(envelope.clientWidth-80);
           const ry = 20 + Math.random()*60;
           makeHeart(rx,ry);
-        }, i*60); // Aumentado el intervalo
+        }, i*60);
       }
+      
+      // Ocultar el indicador de scroll después de 5 segundos
+      setTimeout(() => {
+        scrollIndicator.style.display = 'none';
+      }, 5000);
     }
 
     // Accesibilidad con teclado
@@ -476,7 +559,7 @@
     function startMusic() {
       if (musicStarted) return;
       
-      audio.volume = 0.5; // Volumen al 50%
+      audio.volume = 0.5;
       
       // Intentar reproducir la música
       const playPromise = audio.play();
@@ -490,7 +573,7 @@
             setTimeout(() => {
               loadingScreen.style.display = 'none';
             }, 500);
-          }, 1000); // Reducido el tiempo de espera
+          }, 1000);
         }).catch(error => {
           // La reproducción falló, mostrar instrucciones
           loadingScreen.innerHTML = `
@@ -532,7 +615,7 @@
       preloadImage.src = 'https://animafox00gg.github.io/MUISICA/Sunflowers.png';
       
       // Esperar un momento antes de intentar reproducir la música
-      setTimeout(startMusic, 800); // Reducido el tiempo de espera
+      setTimeout(startMusic, 800);
     });
 
     // Detener el confeti si la página se cierra
