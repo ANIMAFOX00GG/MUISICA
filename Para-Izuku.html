@@ -8,7 +8,7 @@
   <style>
     :root{
       --bg:#f7e9f2;
-      --envelope:#d95d8c;
+      --envelope:#fffaf0;
       --paper:#ffebf3;
       --text-color: #5a3d5c;
     }
@@ -36,22 +36,25 @@
 
     /* Envelope */
     .envelope{
-      width:100%;height:260px;position:relative;cursor:pointer;user-select:none;transition:transform .25s ease;
+      width:100%;height:300px;position:relative;cursor:pointer;user-select:none;transition:transform .25s ease;
       margin:0 auto;display:flex;align-items:center;justify-content:center;perspective:1000px;
       transform: translateZ(0);
     }
 
     .envelope .body{
-      width:100%;height:180px;background:linear-gradient(180deg,var(--envelope),#c54a73);border-radius:0 0 12px 12px;position:relative;overflow:visible;box-shadow:0 10px 30px rgba(0,0,0,.12);
+      width:100%;height:200px;background:linear-gradient(180deg,var(--envelope),#f5f0e6);border-radius:0 0 12px 12px;position:relative;overflow:visible;box-shadow:0 10px 30px rgba(0,0,0,.08);
       display:flex;align-items:flex-start;justify-content:center;padding:1.5rem;
       transform: translateZ(0);
+      border: 1px solid rgba(0,0,0,0.05);
     }
 
     /* flap */
     .envelope .flap{
-      position:absolute;top:45px;left:-5px;right:-5px;height:120px;background:linear-gradient(180deg,#f18fb5,#c64b7f);clip-path:polygon(0 0,50% 100%,100% 0);border-radius:12px 12px 0 0;transform-origin:center top;transition:transform .7s cubic-bezier(.2,.9,.3,1), top .7s cubic-bezier(.2,.9,.3,1);z-index:3;
+      position:absolute;top:50px;left:-5px;right:-5px;height:130px;background:linear-gradient(180deg,#fffaf0,#f5f0e6);clip-path:polygon(0 0,50% 100%,100% 0);border-radius:12px 12px 0 0;transform-origin:center top;transition:transform .7s cubic-bezier(.2,.9,.3,1), top .7s cubic-bezier(.2,.9,.3,1);z-index:3;
       transform: translateZ(0);
       backface-visibility: hidden;
+      border: 1px solid rgba(0,0,0,0.05);
+      border-bottom: none;
     }
 
     .envelope.open .flap{transform:rotateX(180deg) translateY(-5px)}
@@ -61,7 +64,7 @@
       position: absolute;
       top: 15px;
       width: 95%;
-      height: 350px;
+      height: 380px;
       transform: translateY(80px);
       opacity: 0;
       transition: all .8s cubic-bezier(.2,.9,.3,1);
@@ -79,7 +82,7 @@
     
     .card{
       width:100%;
-      min-height:320px;
+      min-height:380px;
       background:linear-gradient(180deg,var(--paper),#ffe6f0);
       padding:30px;
       text-align:center;
@@ -87,7 +90,7 @@
       flex-direction:column;
       align-items:center;
       overflow-y: auto;
-      max-height: 350px;
+      max-height: 380px;
       border: 1px solid rgba(255, 255, 255, 0.5);
     }
     
@@ -314,13 +317,13 @@
 
     @media (max-width:480px){
       .scene{width:380px}
-      .envelope{height:240px}
+      .envelope{height:280px}
       .card-container {
-        height: 300px;
+        height: 320px;
       }
       .card{
         padding:20px;
-        min-height:280px;
+        min-height:300px;
       }
       .card h1 {
         font-size: 2rem;
@@ -337,16 +340,16 @@
       
       /* Optimizaciones para móviles */
       .envelope .body {
-        height: 160px;
+        height: 180px;
       }
       
       .envelope .flap {
-        height: 100px;
-        top: 40px;
+        height: 120px;
+        top: 45px;
       }
       
       .card {
-        min-height: 250px;
+        min-height: 280px;
         padding: 15px;
       }
       
@@ -577,8 +580,10 @@
         }).catch(error => {
           // La reproducción falló, mostrar instrucciones
           loadingScreen.innerHTML = `
-            <h2 style="color: #d95d8c; text-align: center; margin-bottom: 20px;">¡Toca para activar la música!</h2>
-            <p style="text-align: center;">Por razones técnicas, debes interactuar con la página para reproducir la música.</p>
+            <div style="text-align: center; padding: 20px; max-width: 300px;">
+              <h2 style="color: #8a2f57; margin-bottom: 20px; font-family: 'Cormorant Garamond', serif;">Porque la música es lo que el corazón canta</h2>
+              <p style="color: #5a3d5c; font-family: 'Cormorant Garamond', serif;">Toca la pantalla para continuar</p>
+            </div>
           `;
           
           // Esperar a que el usuario haga clic
